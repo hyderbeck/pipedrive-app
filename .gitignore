@@ -10,3 +10,6 @@ dist-ssr
 
 # Editor directories and files
 .DS_Store
+
+# Local Netlify folder
+.netlify
