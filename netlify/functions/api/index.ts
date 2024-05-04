@@ -1,14 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import express, { RequestHandler, Router } from "express";
 import serverless from "serverless-http";
-import {
-  OAuth2Configuration,
-  TokenResponse,
-  Configuration,
-  UsersApi,
-} from "pipedrive";
+import pipedrive from "pipedrive";
 import cookieParser from "cookie-parser";
 import cookieSession from "cookie-session";
-
 const app = express();
 
 app.use(cookieParser());
@@ -19,41 +17,37 @@ app.use(
   })
 );
 
-const oauth2 = new OAuth2Configuration({
-  clientId: process.env.CLIENT_ID!,
-  clientSecret: process.env.CLIENT_SECRET!,
-  redirectUri: process.env.REDIRECT_URI!,
-});
+const apiClient = new pipedrive.ApiClient();
+
+const oauth2 = apiClient.authentications.oauth2;
+oauth2.clientId = process.env.CLIENT_ID!;
+oauth2.clientSecret = process.env.CLIENT_SECRET!;
+oauth2.redirectUri = process.env.REDIRECT_URI!;
 
 // auth
 
-app.get("/login", (req, res) => {
-  try {
-    const token = oauth2.updateToken(
-      req.session?.accessToken as TokenResponse | null
-    ) as TokenResponse | null;
-    if (!token) {
-      const authUrl = oauth2.authorizationUrl;
-      res.redirect(authUrl);
-    } else {
-      res.redirect("/?=");
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send(error);
+const login = Router();
+app.use("/login", login);
+
+login.get("/", (req, res) => {
+  if (req.session?.accessToken) {
+    res.redirect("/?=");
+  } else {
+    const authUrl = apiClient.buildAuthorizationUrl();
+    res.redirect(authUrl);
   }
 });
 
-app.get("/login/callback", (async (req, res) => {
+login.get("/callback", (async (req, res) => {
+  if (req.query.error) {
+    res.redirect("/?=");
+    return;
+  }
+  const authCode = req.query.code;
   try {
-    if (req.query.error) {
-      res.redirect("/?=");
-    } else {
-      const authCode = req.query.code as string;
-      const newAccessToken = await oauth2.authorize(authCode);
-      req.session!.accessToken = newAccessToken;
-      res.redirect("/login");
-    }
+    await apiClient.authorize(authCode);
+    req.session!.accessToken = apiClient.authentications.oauth2.accessToken;
+    res.redirect("/login");
   } catch (error) {
     console.error(error);
     return res.status(500).send(error);
@@ -62,22 +56,15 @@ app.get("/login/callback", (async (req, res) => {
 
 // api
 
-const router = Router();
-app.use("/api", router);
+const api = Router();
+app.use("/api", api);
 
-router.get("/username", (async (req, res) => {
-  const token = oauth2.updateToken(
-    req.session?.accessToken as TokenResponse | null
-  ) as TokenResponse | null;
-  if (!token) {
+api.get("/username", (async (req, res) => {
+  if (!req.session?.accessToken) {
     return res.send("None");
   } else {
-    const apiConfig = new Configuration({
-      accessToken: oauth2.getAccessToken,
-      basePath: oauth2.basePath,
-    });
-    const usersApi = new UsersApi(apiConfig);
-    const username = (await usersApi.getCurrentUser()).data!.name;
+    const api = new pipedrive.UsersApi(apiClient);
+    const username = (await api.getCurrentUser()).data!.name;
     return res.send(username);
   }
 }) as RequestHandler);
