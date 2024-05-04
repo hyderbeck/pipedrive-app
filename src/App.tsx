@@ -3,21 +3,26 @@ import Form from "./components/form/Form";
 import { useState, useEffect } from "react";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState<string | null>("");
   useEffect(() => {
-    const checkLogin = async () => {
-      const res = await fetch("/api");
-      if ((await res.text()) === "OK") {
-        setIsLoggedIn(true);
+    const getUsername = async () => {
+      const res = await fetch("/api/username");
+      const text = await res.text();
+      if (text != "None") {
+        setUsername(text);
+      } else {
+        setUsername(null);
       }
     };
 
-    void checkLogin();
-  }, [isLoggedIn]);
+    void getUsername();
+  }, [username]);
 
   return (
     <main>
-      {!isLoggedIn && <Button text="Login" />}
+      {username
+        ? `Hello, ${username}!`
+        : username === null && <Button text="Login" />}
       <Form />
     </main>
   );

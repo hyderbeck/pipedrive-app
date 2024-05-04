@@ -1,6 +1,11 @@
-import express, { RequestHandler } from "express";
+import express, { RequestHandler, Router } from "express";
 import serverless from "serverless-http";
-import { OAuth2Configuration, TokenResponse } from "pipedrive";
+import {
+  OAuth2Configuration,
+  TokenResponse,
+  Configuration,
+  UsersApi,
+} from "pipedrive";
 import cookieParser from "cookie-parser";
 import cookieSession from "cookie-session";
 
@@ -57,15 +62,24 @@ app.get("/login/callback", (async (req, res) => {
 
 // api
 
-app.get("/api", (req, res) => {
+const router = Router();
+app.use("/api", router);
+
+router.get("/username", (async (req, res) => {
   const token = oauth2.updateToken(
     req.session?.accessToken as TokenResponse | null
   ) as TokenResponse | null;
   if (!token) {
-    return res.send("Not logged in");
+    return res.send("None");
   } else {
-    return res.send("OK");
+    const apiConfig = new Configuration({
+      accessToken: oauth2.getAccessToken,
+      basePath: oauth2.basePath,
+    });
+    const usersApi = new UsersApi(apiConfig);
+    const username = (await usersApi.getCurrentUser()).data!.name;
+    return res.send(username);
   }
-});
+}) as RequestHandler);
 
 export const handler = serverless(app);
