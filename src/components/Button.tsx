@@ -1,6 +1,14 @@
-function Button({ text, onClick }: { text: string; onClick?: () => void }) {
+function Button({
+  text,
+  onClick,
+  submit,
+}: {
+  text: string;
+  onClick?: () => void;
+  submit?: boolean;
+}) {
   return (
-    <button type="button" onClick={onClick}>
+    <button type={submit ? "submit" : "button"} onClick={onClick}>
       {text}
     </button>
   );

@@ -6,7 +6,7 @@ import Button from "../Button";
 
 function Form() {
   return (
-    <form action={"/api/jobs/new"}>
+    <form action="api/jobs/new" method="POST">
       <Section heading="Client details">
         <div>
           <TextInput placeholder="First name" name="firstName" type="text" />
@@ -39,7 +39,7 @@ function Form() {
         <TextInput placeholder="State" name="state" type="text" />
         <div>
           <TextInput placeholder="Zip code" name="zipCode" type="text" />
-          <Select placeholder="Area" options={["foo", "bar"]} name="Area" />
+          <Select placeholder="Area" options={["foo", "bar"]} name="area" />
         </div>
       </Section>
       <Section heading="Scheduled">
@@ -52,7 +52,7 @@ function Form() {
           name="testSelect"
         />
       </Section>
-      <Button text="Create job" />
+      <Button text="Create job" submit />
     </form>
   );
 }
