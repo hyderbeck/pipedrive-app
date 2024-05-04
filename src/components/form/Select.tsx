@@ -1,15 +1,19 @@
 function Select({
   placeholder,
   options,
+  name,
 }: {
   placeholder: string;
   options: string[];
+  name: string;
 }) {
   return (
-    <select>
+    <select name={name}>
       <option value="">{placeholder}</option>
       {options.map((option) => (
-        <option key={option}>{option}</option>
+        <option key={option} value={option}>
+          {option}
+        </option>
       ))}
     </select>
   );
