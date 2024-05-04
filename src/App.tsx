@@ -1,3 +1,4 @@
+import Button from "./components/Button";
 import Form from "./components/form/Form";
 import { useState, useEffect } from "react";
 
@@ -14,7 +15,12 @@ function App() {
     void checkLogin();
   }, [isLoggedIn]);
 
-  return isLoggedIn ? <Form /> : <h1>Not logged in</h1>;
+  return (
+    <main>
+      {!isLoggedIn && <Button text="Login" />}
+      <Form />
+    </main>
+  );
 }
 
 export default App;

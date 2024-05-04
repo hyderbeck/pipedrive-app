@@ -2,6 +2,7 @@ import Section from "./Section";
 import TextInput from "./TextInput";
 import Select from "./Select";
 import Textarea from "./Textarea";
+import Button from "../Button";
 
 function Form() {
   return (
@@ -36,7 +37,7 @@ function Form() {
         <TextInput placeholder="End time" />
         <Select placeholder="Test select" options={["foo", "bar"]} />
       </Section>
-      <button>Create job</button>
+      <Button text="Create job" />
     </form>
   );
 }
