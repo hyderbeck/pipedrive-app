@@ -36,7 +36,7 @@ app.get("/login", (req, res) => {
       const authUrl = oauth2.authorizationUrl;
       res.redirect(authUrl);
     } else {
-      res.redirect("/");
+      res.redirect("/?=");
     }
   } catch (error) {
     console.error(error);
@@ -47,7 +47,7 @@ app.get("/login", (req, res) => {
 app.get("/login/callback", (async (req, res) => {
   try {
     if (req.query.error) {
-      res.redirect("/");
+      res.redirect("/?=");
     } else {
       const authCode = req.query.code as string;
       const newAccessToken = await oauth2.authorize(authCode);
