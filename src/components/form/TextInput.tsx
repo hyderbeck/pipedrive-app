@@ -17,6 +17,7 @@ function TextInput({
       placeholder={placeholder}
       name={name}
       required={required}
+      className="border-2 min-w-0 px-2 py-1 border-neutral-700"
     />
   );
   return children ? (

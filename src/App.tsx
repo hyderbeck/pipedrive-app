@@ -20,7 +20,7 @@ function App() {
       const params = new URL(location.href).searchParams;
       if (params.get("id")) {
         await new AppExtensionsSDK().initialize({
-          size: { width: 720, height: 500 },
+          size: { width: 720, height: 620 },
         });
       }
     };
@@ -30,9 +30,9 @@ function App() {
   }, [isUser]);
 
   return (
-    <main>
+    <main className="flex justify-center p-2 sm:pt-4 text-neutral-900">
       {loading ? (
-        "Loading..."
+        <p className="text-lg">Loading...</p>
       ) : isUser ? (
         <Form />
       ) : (
@@ -41,6 +41,7 @@ function App() {
           onClick={() => {
             window.open(`${location.origin}/login`, "_blank");
           }}
+          className="text-lg px-4 border-blue-400"
         />
       )}
     </main>
