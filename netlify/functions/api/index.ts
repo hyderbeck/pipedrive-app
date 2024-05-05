@@ -74,7 +74,7 @@ api.get("/user", (async (_req, res) => {
   }
 }) as RequestHandler);
 
-api.post("/jobs/new", (async (req, res) => {
+api.post("/jobs", (async (req, res) => {
   const jobFields = [
     "Job type",
     "Job source",
@@ -94,16 +94,13 @@ api.post("/jobs/new", (async (req, res) => {
       key: dealFieldsData.find((d) => d.name == field)?.key as string,
     };
   });
-
   const formData: Record<string, string> = {};
-  const parsedData = decodeURIComponent(req.body as string)
-    .split("&")
-    .map((data) => data.replace(/\+/g, " "));
-  for (const data of parsedData) {
-    const [name, value] = data.split("=");
+  for (const [name, value] of Object.entries(
+    JSON.parse(req.body as string) as object
+  )) {
     // validate with zod
     if (!["Job description", "email"].includes(name)) {
-      if (!name.trim()) return res.status(400).send("Bad request");
+      // if (!value.trim()) return res.status(400).send("Bad request");
     }
     if (
       [
@@ -125,6 +122,7 @@ api.post("/jobs/new", (async (req, res) => {
   }
   const title = `Job ${randomUUID().slice(0, 8)}`;
   formData.title = title;
+  console.log(formData);
 
   const dealsApi = new pipedrive.DealsApi(apiClient);
   const opts = pipedrive.NewDeal.constructFromObject(formData);
@@ -140,7 +138,7 @@ api.post("/jobs/new", (async (req, res) => {
     dealId,
   });
   await notesApi.addNote(noteOpts);
-  return res.send("Job created");
+  return res.send(String(dealId));
 }) as RequestHandler);
 
 // api.get(job) by id
