@@ -9,6 +9,8 @@ import pipedrive from "pipedrive";
 import cookieParser from "cookie-parser";
 import cookieSession from "cookie-session";
 import { randomUUID } from "crypto";
+import { fmtFormData } from "./utils";
+import { addDeal } from "./queries";
 
 const app = express();
 
@@ -54,6 +56,7 @@ login.get("/callback", (async (req, res) => {
 }) as RequestHandler);
 
 // api
+// TODO: refactor
 
 const api = Router();
 app.use("/api", api);
@@ -75,72 +78,32 @@ api.get("/user", (async (_req, res) => {
 }) as RequestHandler);
 
 api.post("/jobs", (async (req, res) => {
-  const jobFields = [
-    "Job type",
-    "Job source",
-    "Job description",
-    "Address",
-    "Area",
-    "Job date",
-    "Job start time",
-    "Job end time",
-    "Test select",
-  ];
   const dealFieldsApi = new pipedrive.DealFieldsApi(apiClient);
   const dealFieldsData = (await dealFieldsApi.getDealFields()).data;
-  const jobFieldKeys = jobFields.map((field) => {
-    return {
-      name: field,
-      key: dealFieldsData.find((d) => d.name == field)?.key as string,
-    };
-  });
-  const formData: Record<string, string> = {};
-  for (const [name, value] of Object.entries(
-    JSON.parse(req.body as string) as object
-  )) {
-    // validate with zod
-    if (!["Job description", "email"].includes(name)) {
-      // if (!value.trim()) return res.status(400).send("Bad request");
-    }
-    if (
-      [
-        "first_name",
-        "last_name",
-        "phone",
-        "email",
-        "city",
-        "state",
-        "zip_code",
-      ].includes(name)
-    ) {
-      // add contact person
-      console.log(name, value);
-    } else {
-      formData[jobFieldKeys.find((field) => field.name == name)!.key] =
-        value.trim();
-    }
-  }
   const title = `Job ${randomUUID().slice(0, 8)}`;
-  formData.title = title;
-  console.log(formData);
+  let formData = {};
+  try {
+    formData = fmtFormData(
+      req.body as string,
+      title,
+      dealFieldsData as Record<string, string>[]
+    );
+  } catch (error) {
+    return res.status(400).send("Bad request");
+  }
 
-  const dealsApi = new pipedrive.DealsApi(apiClient);
-  const opts = pipedrive.NewDeal.constructFromObject(formData);
-  await dealsApi.addDeal(opts);
+  const dealId = await addDeal(pipedrive, apiClient, formData, title);
 
-  const dealsData = (await dealsApi.getDeals({})).data;
-  const dealId = dealsData.find((d) => {
-    return d.title == title;
-  })!.id;
   const notesApi = new pipedrive.NotesApi(apiClient);
   const noteOpts = pipedrive.AddNoteRequest.constructFromObject({
     content: "Job created",
     dealId,
   });
   await notesApi.addNote(noteOpts);
-  return res.send(String(dealId));
+
+  return res.send(dealId);
 }) as RequestHandler);
 
-// api.get(job) by id
+// TODO: api.get(job) by id
 
 export const handler = serverless(app);

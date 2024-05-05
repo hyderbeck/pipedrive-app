@@ -24,12 +24,15 @@ function Form() {
     return (
       <a
         href={link}
+        target="_blank"
+        rel="noreferrer"
         className="border-2 rounded-md text-lg px-4 py-1 border-blue-400 hover:shadow-inner hover:shadow-neutral-300"
       >
         View job
       </a>
     );
   return (
+    // TODO: add validation rules
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     <form onSubmit={createJob} className="flex flex-col gap-y-6 items-center">
       <div className="flex justify-between gap-6 flex-col sm:flex-row">
