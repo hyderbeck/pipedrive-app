@@ -31,13 +31,9 @@ oauth2.redirectUri = process.env.REDIRECT_URI!;
 const login = Router();
 app.use("/login", login);
 
-login.get("/", (req, res) => {
-  if (req.session?.accessToken) {
-    res.redirect("/?=");
-  } else {
-    const authUrl = apiClient.buildAuthorizationUrl();
-    res.redirect(authUrl as string);
-  }
+login.get("/", (_req, res) => {
+  const authUrl = apiClient.buildAuthorizationUrl();
+  res.redirect(authUrl as string);
 });
 
 login.get("/callback", (async (req, res) => {
@@ -45,11 +41,11 @@ login.get("/callback", (async (req, res) => {
     res.redirect("/?=");
     return;
   }
-  const authCode = req.query.code;
   try {
+    const authCode = req.query.code;
     await apiClient.authorize(authCode);
-    req.session!.accessToken = apiClient.authentications.oauth2.accessToken;
-    res.redirect("/login");
+    req.session!.refreshToken = apiClient.authentications.oauth2.refreshToken;
+    res.redirect("/?=");
   } catch (error) {
     console.error(error);
     return res.status(500).send(error);
@@ -61,13 +57,14 @@ login.get("/callback", (async (req, res) => {
 const api = Router();
 app.use("/api", api);
 
-api.get("/username", (async (req, res) => {
-  if (!req.session?.accessToken) {
-    return res.send("None");
-  } else {
+api.get("/user", (async (_req, res) => {
+  try {
     const api = new pipedrive.UsersApi(apiClient);
-    const username = (await api.getCurrentUser()).data!.name;
-    return res.send(username);
+    const { data } = await api.getCurrentUser();
+    return res.send(data);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send(error);
   }
 }) as RequestHandler);
 
@@ -98,7 +95,7 @@ api.post("/jobs/new", (async (req, res) => {
     if (["address", "city", "state", "zipCode"].includes(key)) {
       fullAddress[key] = value;
     } else if (key == "jobType") {
-      formData.title = value;
+      formData.title = value || "test"; // no validation
       formData[h[key]] = value;
     } else if (["firstName", "lastName", "phone", "email"].includes(key)) {
       console.log(key, value);
@@ -114,10 +111,10 @@ api.post("/jobs/new", (async (req, res) => {
     const api = new pipedrive.DealsApi(apiClient);
     const opts = pipedrive.NewDeal.constructFromObject(formData);
     await api.addDeal(opts);
-    return res.send("ok");
+    return res.send("Job created");
   } catch (error) {
     console.error(error);
-    return res.status(500).send(error);
+    return res.status(500).send(error); // validation errors
   }
 }) as RequestHandler);
 

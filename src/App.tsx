@@ -3,40 +3,34 @@ import Form from "./components/form/Form";
 import { useState, useEffect } from "react";
 
 function App() {
-  const [username, setUsername] = useState<string | null>(null);
+  const [isUser, setUser] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getUsername = async () => {
-      const res = await fetch("/api/username");
-      const text = await res.text();
-      if (text != "None") {
-        setUsername(text);
+    const getUser = async () => {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        setUser(true);
       }
       setLoading(false);
     };
 
-    void getUsername();
-  }, [username]);
+    void getUser();
+  }, [isUser]);
 
   return (
     <main>
       {loading ? (
         "Loading..."
+      ) : isUser ? (
+        <Form />
       ) : (
-        <>
-          {username ? (
-            `Hello, ${username}!`
-          ) : (
-            <Button
-              text="Login"
-              onClick={() => {
-                location.replace("/login");
-              }}
-            />
-          )}
-          <Form />
-        </>
+        <Button
+          text="Login"
+          onClick={() => {
+            location.replace("/login");
+          }}
+        />
       )}
     </main>
   );
