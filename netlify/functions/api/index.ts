@@ -8,6 +8,7 @@ import pipedrive from "pipedrive";
 
 import cookieParser from "cookie-parser";
 import cookieSession from "cookie-session";
+import { randomUUID } from "crypto";
 
 const app = express();
 
@@ -100,6 +101,10 @@ api.post("/jobs/new", (async (req, res) => {
     .map((data) => data.replace(/\+/g, " "));
   for (const data of parsedData) {
     const [name, value] = data.split("=");
+    // validate with zod
+    if (!["Job description", "email"].includes(name)) {
+      if (!name.trim()) return res.status(400).send("Bad request");
+    }
     if (
       [
         "first_name",
@@ -114,10 +119,11 @@ api.post("/jobs/new", (async (req, res) => {
       // add contact person
       console.log(name, value);
     } else {
-      formData[jobFieldKeys.find((field) => field.name == name)!.key] = value;
+      formData[jobFieldKeys.find((field) => field.name == name)!.key] =
+        value.trim();
     }
   }
-  const title = "test";
+  const title = `Job ${randomUUID().slice(0, 8)}`;
   formData.title = title;
 
   const dealsApi = new pipedrive.DealsApi(apiClient);
