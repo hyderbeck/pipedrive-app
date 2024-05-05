@@ -81,11 +81,11 @@ api.post("/jobs/new", (async (req, res) => {
     "Test select",
   ];
   const dealFieldsApi = new pipedrive.DealFieldsApi(apiClient);
-  const { data } = await dealFieldsApi.getDealFields();
+  const dealFieldsData = (await dealFieldsApi.getDealFields()).data;
   const jobFieldKeys = jobFields.map((field) => {
     return {
       name: field,
-      key: data.find((d) => d.name == field)?.key as string,
+      key: dealFieldsData.find((d) => d.name == field)?.key as string,
     };
   });
 
@@ -106,17 +106,33 @@ api.post("/jobs/new", (async (req, res) => {
         "zip_code",
       ].includes(name)
     ) {
+      // add contact person
       console.log(name, value);
     } else {
       formData[jobFieldKeys.find((field) => field.name == name)!.key] = value;
     }
   }
-  formData.title = "test";
+  const title = "test";
+  formData.title = title;
 
   const dealsApi = new pipedrive.DealsApi(apiClient);
   const opts = pipedrive.NewDeal.constructFromObject(formData);
   await dealsApi.addDeal(opts);
+
+  const dealsData = (await dealsApi.getDeals({})).data;
+  console.log(formData);
+  const dealId = dealsData.find((d) => {
+    return d.title == title;
+  })!.id;
+  const notesApi = new pipedrive.NotesApi(apiClient);
+  const noteOpts = pipedrive.AddNoteRequest.constructFromObject({
+    content: "Job created",
+    dealId,
+  });
+  await notesApi.addNote(noteOpts);
   return res.send("Job created");
 }) as RequestHandler);
+
+// api.get(job) by id
 
 export const handler = serverless(app);
