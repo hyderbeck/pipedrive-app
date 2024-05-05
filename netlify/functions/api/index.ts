@@ -57,6 +57,11 @@ login.get("/callback", (async (req, res) => {
 const api = Router();
 app.use("/api", api);
 
+api.use((req, _res, next) => {
+  apiClient.authentications.oauth2.refreshToken = req.session!.refreshToken;
+  next();
+});
+
 api.get("/user", (async (_req, res) => {
   try {
     const api = new pipedrive.UsersApi(apiClient);
@@ -120,7 +125,6 @@ api.post("/jobs/new", (async (req, res) => {
   await dealsApi.addDeal(opts);
 
   const dealsData = (await dealsApi.getDeals({})).data;
-  console.log(formData);
   const dealId = dealsData.find((d) => {
     return d.title == title;
   })!.id;

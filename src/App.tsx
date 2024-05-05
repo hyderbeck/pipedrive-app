@@ -17,8 +17,8 @@ function App() {
     };
 
     const initIFrame = async () => {
-      const id = new URL(location.href).searchParams.get("id");
-      if (id) {
+      const params = new URL(location.href).searchParams;
+      if (params.get("id")) {
         await new AppExtensionsSDK().initialize({
           size: { width: 720, height: 500 },
         });
@@ -39,7 +39,7 @@ function App() {
         <Button
           text="Login"
           onClick={() => {
-            location.replace("/login");
+            window.open(`${location.origin}/login`, "_blank");
           }}
         />
       )}
