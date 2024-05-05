@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@pipedrive/app-extensions-sdk": "^0.10.1",
     "cookie-parser": "^1.4.6",
     "cookie-session": "^2.1.0",
     "express": "^4.19.2",

@@ -69,6 +69,7 @@ api.get("/user", (async (_req, res) => {
 }) as RequestHandler);
 
 api.post("/jobs/new", (async (req, res) => {
+  /*
   const h: Record<string, string> = {
     jobType: "0df255ab6f3965e22ecc6f00d9f63deaec26f1ab",
     jobSource: "73b6d28bc81b8765e83ed768564b9f3486fe3efa",
@@ -106,7 +107,12 @@ api.post("/jobs/new", (async (req, res) => {
   formData[
     h.address
   ] = `${fullAddress.zipCode} ${fullAddress.address} ${fullAddress.city} ${fullAddress.state}`;
+  */
 
+  const dealFieldsApi = new pipedrive.DealFieldsApi(apiClient);
+  const dealFields = await dealFieldsApi.getDealFields();
+  return res.send(dealFields);
+  /*
   try {
     const api = new pipedrive.DealsApi(apiClient);
     const opts = pipedrive.NewDeal.constructFromObject(formData);
@@ -116,6 +122,7 @@ api.post("/jobs/new", (async (req, res) => {
     console.error(error);
     return res.status(500).send(error); // validation errors
   }
+  */
 }) as RequestHandler);
 
 export const handler = serverless(app);
